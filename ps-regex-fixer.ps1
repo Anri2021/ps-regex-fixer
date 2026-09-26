@@ -84,6 +84,15 @@ $rules = @(
 
     # [type]; $var -> [type] $var
     @{ P = 'XFsoW2EtekEtWjAtOV9cW1xdXSspXF1ccyo7XHMqKFwkKQ=='; R = 'WyQxXSAkMg==' }
+
+    # תיקון ארטיפקט מודולו של LaTeX: \% -> %
+    @{ P = 'XFwl'; R = 'JQ==' }
+
+    # הפרדת אינדקס מערך שנדבק למשתנה: \(arr[idx]\)var -> \(arr[idx];\)var
+    @{ P = 'KFwkXHcrXFtbXlxdXHJcbl0rXF0pKFwkXHcrKQ=='; R = 'JDE7ICQy' }
+
+    # הפרדת צבע פלט שנדבק למשתנה הבא: -ForegroundColor Color\(var -> -ForegroundColor Color;\)var
+    @{ P = 'KC1Gb3JlZ3JvdW5kQ29sb3JccytbYS16QS1aXSspKFwkKQ=='; R = 'JDE7ICQy' }
 )
 
 foreach ($r in $rules) {

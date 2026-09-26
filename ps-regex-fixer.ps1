@@ -10,6 +10,22 @@ param(
     [string]$OutputPath = ""
 )
 
+function Get-FileEncoding([string]$path) {
+     $bytes = [System.IO.File]::ReadAllBytes( $path)
+
+    if ( $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and  $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        return [System.Text.Encoding]::UTF8
+    }
+
+    try {
+         $utf8Strict = [System.Text.UTF8Encoding]::new( $false, $true)
+         $utf8Strict.GetString( $bytes) | Out-Null
+        return [System.Text.Encoding]::UTF8
+    } catch {
+        return [System.Text.Encoding]::GetEncoding("windows-1255")
+    }
+}
+
 # פונקציית עזר לפענוח מחרוזות Base64 בזמן ריצה
 function Decode-B64([string]$b64) {
     [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($b64))
@@ -17,7 +33,7 @@ function Decode-B64([string]$b64) {
 
 # אימות קיום קובץ הקלט
 if (-not (Test-Path $InputPath)) {
-    Write-Host "[-] הקובץ '$InputPath' לא נמצא. ודא את הנתיב והרם שוב." -ForegroundColor Red
+    Write-Host "[-] File '$InputPath' not found. Verify path and retry." -ForegroundColor Red
     return
 }
 
@@ -28,7 +44,8 @@ if ([string]::IsNullOrWhiteSpace($OutputPath)) {
 
 # 1. קריאת תוכן הקובץ המקורי (שימוש ב-ProviderPath למניעת שגיאות ניתוב)
 $resolvedPath = (Resolve-Path $InputPath).ProviderPath
-$raw = [System.IO.File]::ReadAllText( $resolvedPath, [System.Text.Encoding]::UTF8)
+$fileEnc = Get-FileEncoding $resolvedPath
+$raw = [System.IO.File]::ReadAllText( $resolvedPath, $fileEnc)
 
 # 2. אתחול משתנה עבודה
 $clean = $raw
@@ -111,7 +128,7 @@ foreach ($r in $rules) {
 # 4. שמירת התוצאה לקובץ היעד (מתבצעת תמיד לפני בדיקת ה-AST)
 $targetPath = [System.IO.Path]::GetFullPath( $OutputPath)
 [System.IO.File]::WriteAllText($targetPath, $clean, [System.Text.Encoding]::UTF8)
-Write-Host "[+] הקובץ המתוקן נשמר בהצלחה בנתיב: $OutputPath" -ForegroundColor Green
+Write-Host "[+] Fixed script saved to: $OutputPath" -ForegroundColor Green
 
 # 5. בדיקת תקינות תחבירית (AST Parser) - מוגנת מפני קריסות פלט
 try {
@@ -120,13 +137,13 @@ try {
     [System.Management.Automation.Language.Parser]::ParseInput($clean, [ref] $tokens, [ref]$errors) | Out-Null
 
     if ($null -eq $errors -or $errors.Count -eq 0) {
-        Write-Host "[V] בדיקת תחביר עברה בהצלחה! הקוד תקין ומוכן להרצה." -ForegroundColor Cyan
+        Write-Host "[V] Syntax check passed! Code is valid and ready." -ForegroundColor Cyan
     } else {
         Write-Host ("[-] אותרו {0} שגיאות תחביר שדורשות בדיקה ידנית:" -f $errors.Count) -ForegroundColor Yellow
         foreach ($err in $errors) {
-            Write-Host ("  -> Line {0}: {1}" -f $err.Extent.StartLineNumber, $err.Message) -ForegroundColor Red
+            Write-Host ("[-] Found {0} syntax errors requiring review:" -f $errors.Count) -ForegroundColor Yellow
         }
     }
 } catch {
-    Write-Host "[-] בדיקת ה-AST נתקלה בשגיאה פנימית אך הקובץ נשמר." -ForegroundColor Yellow
+    Write-Host "[-] AST check failed, but output file was saved." -ForegroundColor Yellow
 }

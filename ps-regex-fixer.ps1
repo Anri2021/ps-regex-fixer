@@ -38,7 +38,7 @@ $rules = @(
     # \vert{} -> |
     @{ P = 'XFx2ZXJ0XHtcfQ=='; R = 'fA==' }
 
-    # שחזור משתנים: \(var או\)var או \(\(var -> \(var (תומך גם ב-\)_ ובמשתנים בוליאניים)
+    # שחזור משתנים: \(var או \)var או \(\(var -> $var (תומך גם ב-_ ובמשתנים בוליאניים)
     @{ P = 'KD86XFxbKCldKStcJD8oW2EtekEtWl9dW2EtekEtWjAtOV9dKik='; R = 'JCQkMQ==' }
 
     # מחיקת שאריות ארטיפקטים של LaTeX שלא שויכו למשתנה
@@ -46,40 +46,43 @@ $rules = @(
     @{ P = 'XFxcKA=='; R = '' }
 
     # --- הפרדת פקודות וערכים שנדבקו ---
-    # ) \(var -> );\)var
+    # תיקון לולאות foreach: foreach ($var |collection) -> foreach ($var in $collection)
+    @{ P = 'KFxiZm9yZWFjaFxzKlwoXHMqXCRcdyspXHMqXHxccypcJD8='; R = 'JDEgaW4gJCQ=' }
+
+    # ) $var -> ); $var
     @{ P = 'KFwpKShcJCk='; R = 'JDE7ICQy' }
 
-    # } \(var -> };\)var
+    # } $var -> }; $var
     @{ P = 'KFx9KShcJCk='; R = 'JDE7ICQy' }
 
-    # [] \(var -> []\)var (פותר הדבקות כגון New-Object byte[] $length)
+    # [] $var -> [] $var (פותר הדבקות כגון New-Object byte[] $length)
     @{ P = 'KFxbXF0pKFwkKQ=='; R = 'JDEgJDI=' }
 
-    # ++ \(var -> ++;\)var (פותר הדבקות כגון \(namesOffset++;\)name)
+    # ++ $var -> ++; $var (פותר הדבקות כגון $namesOffset++; $name)
     @{ P = 'KFwrXCspKFwkKQ=='; R = 'JDE7ICQy' }
 
-    # 255 \(var / 0x07FF\)var -> ...; $var
+    # 255 $var / 0x07FF $var -> ...; $var
     @{ P = 'KFxiKD86MHhbMC05YS1mQS1GXSt8XGQrKSkoXCQp'; R = 'JDE7ICQy' }
 
-    # break/continue/return \(var -> ...;\)var
+    # break/continue/return $var -> ...; $var
     @{ P = 'KFxiKD86YnJlYWt8Y29udGludWV8cmV0dXJuKSkoXCQp'; R = 'JDE7ICQy' }
 
-    # Show-HexDump \(ref\)ctxStart
+    # Show-HexDump $ref $ctxStart
     @{ P = 'KFwkcmVmKShcJGN0eFN0YXJ0KQ=='; R = 'JDEgJDI=' }
 
-    # משתנה צמוד למשתנה: \(tmp\)p19 -> \(tmp;\)p19
+    # משתנה צמוד למשתנה: $tmp$p19 -> $tmp; $p19
     @{ P = 'KFwkW2EtekEtWjAtOV9dKykoXCRbYS16QS1aX10p'; R = 'JDE7ICQy' }
 
-    # -op \(var -> -op\)var (מפריד אופרטורים ודגלים שנדבקו: -ne, -eq, -f, -and, -or, -length)
+    # -op $var -> -op $var (מפריד אופרטורים ודגלים שנדבקו: -ne, -eq, -f, -and, -or, -length)
     @{ P = 'KC1bYS16QS1aXSspKFwkKQ=='; R = 'JDEgJDI=' }
 
-    # in \(var -> in\)var
+    # in $var -> in $var
     @{ P = 'KFxiaW4pKFwkKQ=='; R = 'JDEgJDI=' }
 
-    # Cmdlet-Name \(var -> Cmdlet-Name\)var
+    # Cmdlet-Name $var -> Cmdlet-Name $var
     @{ P = 'KFxiW2EtekEtWl0rLVthLXpBLVowLTldKykoXCQp'; R = 'JDEgJDI=' }
 
-    # [type]; \(var -> [type]\)var
+    # [type]; $var -> [type] $var
     @{ P = 'XFsoW2EtekEtWjAtOV9cW1xdXSspXF1ccyo7XHMqKFwkKQ=='; R = 'WyQxXSAkMg==' }
 )
 
@@ -88,6 +91,9 @@ foreach ($r in $rules) {
     $replacement = if ([string]::IsNullOrEmpty($r.R)) { '' } else { Decode-B64 $r.R }
     $clean = [regex]::Replace($clean, $pattern, $replacement)
 }
+
+# הסרת שורת גרש בודדת שנותרה בסוף הקובץ
+$clean = [regex]::Replace($clean, '(?m)^\s*"\s*$', '')
 
 # 4. שמירת התוצאה לקובץ היעד
 $targetPath = [System.IO.Path]::GetFullPath($OutputPath)

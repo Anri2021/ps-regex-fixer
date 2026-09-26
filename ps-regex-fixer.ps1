@@ -139,9 +139,9 @@ try {
     if ($null -eq $errors -or $errors.Count -eq 0) {
         Write-Host "[V] Syntax check passed! Code is valid and ready." -ForegroundColor Cyan
     } else {
-        Write-Host ("[-] אותרו {0} שגיאות תחביר שדורשות בדיקה ידנית:" -f $errors.Count) -ForegroundColor Yellow
+        Write-Host ("[-] Found {0} syntax errors requiring review:" -f $errors.Count) -ForegroundColor Yellow
         foreach ($err in $errors) {
-            Write-Host ("[-] Found {0} syntax errors requiring review:" -f $errors.Count) -ForegroundColor Yellow
+            Write-Host ("  -> Line {0}: {1}" -f $err.Extent.StartLineNumber,$err.Message) -ForegroundColor Red
         }
     }
 } catch {

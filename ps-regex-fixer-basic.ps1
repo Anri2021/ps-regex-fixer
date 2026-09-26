@@ -38,6 +38,9 @@ $rules = @(
     # \vert{} -> |
     @{ P = 'XFx2ZXJ0XHtcfQ=='; R = 'fA==' }
 
+    # שחזור תת-ביטוי משתנה: \((\) -> \((\)
+    @{ P = 'XFxcKFwoXFxcKQ=='; R = 'JCQoJCQ=' }
+    
     # שחזור משתנים: \(var או \)var או \(\(var -> $var (תומך גם ב-_ ובמשתנים בוליאניים)
     @{ P = 'KD86XFxbKCldKStcJD8oW2EtekEtWl9dW2EtekEtWjAtOV9dKik='; R = 'JCQkMQ==' }
 
